@@ -104,9 +104,20 @@ docker build -t rideflow-frontend .
 
 # Executar standalone (porta 4200)
 docker run -p 4200:80 rideflow-frontend
+```
 
-# Ou via docker-compose (a partir da raiz do backend)
-docker-compose up frontend
+### Stack completa via Docker Compose
+
+```bash
+# A partir da pasta backend/, sobe tudo (PG + Redis + Kafka + Backend + Frontend)
+cd ../backend
+docker compose up -d --build
+
+# Ver logs do frontend
+docker logs -f rideflow-frontend
+
+# Parar tudo
+docker compose down
 ```
 
 O Nginx serve a SPA e faz proxy reverso de `/api/` para o backend.

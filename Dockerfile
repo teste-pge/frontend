@@ -10,7 +10,7 @@
 # ==============================================================================
 
 # ── Stage 1: Build ────────────────────────────────────────────────────────────
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 LABEL maintainer="RideFlow Team"
 LABEL description="RideFlow Frontend — Angular 18 SPA"
