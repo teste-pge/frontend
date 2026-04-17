@@ -1,9 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
+import { signal } from '@angular/core';
 
 import { RideFormComponent, MOCK_USERS } from './ride-form.component';
 import { RideFacade } from '@core/facades';
+import { SseService, SseConnectionStatus, SseEvent } from '@core/services/sse.service';
 import { Ride } from '@core/models';
 import { CepService } from '@core/services';
 
@@ -26,25 +28,45 @@ const mockRide: Ride = {
 describe('RideFormComponent', () => {
     let component: RideFormComponent;
     let fixture: ComponentFixture<RideFormComponent>;
-    let rideFacadeSpy: jest.Mocked<RideFacade>;
+
+    const currentRideSignal = signal<Ride | null>(null);
+    const loadingSignal = signal(false);
+    const errorSignal = signal<string | null>(null);
+
+    const rideFacadeSpy = {
+        createRide: jest.fn(),
+        currentRide: currentRideSignal,
+        loading: loadingSignal,
+        error: errorSignal,
+        rides: signal<Ride[]>([]),
+        loadActiveRideForUser: jest.fn(),
+        updateCurrentRideStatus: jest.fn(),
+    };
+
+    const mockSseService = {
+        connectPassenger: jest.fn().mockReturnValue(new Subject<SseEvent>().asObservable()),
+        disconnect: jest.fn(),
+        disconnectPassenger: jest.fn(),
+        passengerConnectionStatus: signal<SseConnectionStatus>('disconnected'),
+        connectionStatus: signal<SseConnectionStatus>('disconnected'),
+    };
+
+    const cepServiceSpy = {
+        lookup: jest.fn().mockReturnValue(of(null)),
+        formatCep: jest.fn(),
+    };
 
     beforeEach(async () => {
-        rideFacadeSpy = {
-            createRide: jest.fn(),
-            loading: jest.fn(() => false) as any,
-            error: jest.fn(() => null) as any,
-            rides: jest.fn(() => []) as any,
-        } as unknown as jest.Mocked<RideFacade>;
-
-        const cepServiceSpy = {
-            lookup: jest.fn().mockReturnValue(of(null)),
-            formatCep: jest.fn(),
-        };
+        currentRideSignal.set(null);
+        loadingSignal.set(false);
+        errorSignal.set(null);
+        jest.clearAllMocks();
 
         await TestBed.configureTestingModule({
             imports: [RideFormComponent, NoopAnimationsModule],
             providers: [
                 { provide: RideFacade, useValue: rideFacadeSpy },
+                { provide: SseService, useValue: mockSseService },
                 { provide: CepService, useValue: cepServiceSpy },
             ],
         }).compileComponents();
@@ -68,7 +90,6 @@ describe('RideFormComponent', () => {
 
     it('should show error when origin and destination CEP+numero are equal', () => {
         fillValidForm(component);
-        // Make addresses the same
         component.form.get('destination')!.patchValue({
             cep: '01310-100', numero: '1000',
         });
@@ -101,7 +122,7 @@ describe('RideFormComponent', () => {
     });
 
     it('should show error message when API returns 400', () => {
-        (rideFacadeSpy.error as any) = jest.fn(() => 'Erro de validação');
+        errorSignal.set('Erro de validação');
         rideFacadeSpy.createRide.mockReturnValue(throwError(() => ({ error: { message: 'Erro de validação' } })));
         fillValidForm(component);
         component.onSubmit();
@@ -124,12 +145,41 @@ describe('RideFormComponent', () => {
         fillValidForm(component);
         component.onSubmit();
 
-        expect(component.form.get('userId')?.value).toBeFalsy();
+        expect(component.form.get('origin.logradouro')?.value).toBeFalsy();
     });
 
     it('should not call createRide when form is invalid', () => {
         component.onSubmit();
         expect(rideFacadeSpy.createRide).not.toHaveBeenCalled();
+    });
+
+    it('should connect passenger SSE when user is selected', () => {
+        component.onUserSelected(MOCK_USERS[0].id);
+
+        expect(mockSseService.connectPassenger).toHaveBeenCalledWith(MOCK_USERS[0].id);
+        expect(rideFacadeSpy.loadActiveRideForUser).toHaveBeenCalledWith(MOCK_USERS[0].id);
+    });
+
+    it('should disconnect SSE on destroy', () => {
+        component.onUserSelected(MOCK_USERS[0].id);
+        component.ngOnDestroy();
+
+        expect(mockSseService.disconnect).toHaveBeenCalled();
+    });
+
+    it('should set currentRide on successful creation', () => {
+        rideFacadeSpy.createRide.mockReturnValue(of(mockRide));
+        fillValidForm(component);
+        component.onSubmit();
+
+        expect(currentRideSignal()).toEqual(mockRide);
+    });
+
+    it('should clear currentRide on newRide', () => {
+        currentRideSignal.set(mockRide);
+        component.onNewRide();
+
+        expect(currentRideSignal()).toBeNull();
     });
 });
 
