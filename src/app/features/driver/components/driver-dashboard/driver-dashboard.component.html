@@ -6,11 +6,12 @@
 
     <mat-card-content>
       <div class="selector-row">
-        <mat-form-field class="full-width">
+        <mat-form-field class="full-width" subscriptSizing="dynamic">
           <mat-label>Selecione o motorista</mat-label>
           <mat-select
             (selectionChange)="onDriverSelected($event.value)"
-            data-testid="driver-select">
+            data-testid="driver-select"
+          >
             @for (driver of driverFacade.drivers(); track driver.id) {
               <mat-option [value]="driver.id">
                 {{ driver.name }} — {{ driver.vehiclePlate }}
@@ -55,7 +56,8 @@
       <app-ride-card
         [ride]="ride"
         (accept)="onAcceptRide($event)"
-        (reject)="onRejectRide($event)" />
+        (reject)="onRejectRide($event)"
+      />
     }
   }
 </div>
