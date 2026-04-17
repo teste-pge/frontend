@@ -1,0 +1,56 @@
+<mat-card class="ride-form-card">
+  <mat-card-header>
+    <mat-card-title>Solicitar Corrida</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    @if (createdRide()) {
+      <app-ride-confirmation [ride]="createdRide()!" />
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="onSubmit()">
+        <mat-form-field class="full-width">
+          <mat-label>Passageiro</mat-label>
+          <mat-select formControlName="userId">
+            @for (user of users; track user.id) {
+              <mat-option [value]="user.id">{{ user.name }}</mat-option>
+            }
+          </mat-select>
+          @if (form.get('userId')?.hasError('required')) {
+            <mat-error>Selecione um passageiro</mat-error>
+          }
+        </mat-form-field>
+
+        <app-address-form
+          label="Origem"
+          controlName="origin"
+          [parentForm]="form" />
+
+        <app-address-form
+          label="Destino"
+          controlName="destination"
+          [parentForm]="form" />
+
+        @if (hasSameAddressError) {
+          <p class="same-address-error">Origem e destino não podem ser iguais</p>
+        }
+
+        @if (rideFacade.error()) {
+          <app-error-message [error]="rideFacade.error()!" />
+        }
+
+        @if (submitting()) {
+          <app-loading-spinner message="Criando corrida..." />
+        }
+
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          class="submit-btn"
+          [disabled]="form.invalid || submitting()">
+          Solicitar Corrida
+        </button>
+      </form>
+    }
+  </mat-card-content>
+</mat-card>
