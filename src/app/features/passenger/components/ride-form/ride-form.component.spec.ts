@@ -126,6 +126,11 @@ describe('RideFormComponent', () => {
 
         expect(component.form.get('userId')?.value).toBeFalsy();
     });
+
+    it('should not call createRide when form is invalid', () => {
+        component.onSubmit();
+        expect(rideFacadeSpy.createRide).not.toHaveBeenCalled();
+    });
 });
 
 function fillValidForm(component: RideFormComponent): void {

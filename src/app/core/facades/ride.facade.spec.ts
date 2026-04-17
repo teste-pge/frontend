@@ -127,4 +127,101 @@ describe('RideFacade', () => {
 
         expect(facade.rides()).toContainEqual(sseRide);
     });
+
+    it('should not duplicate ride from SSE event', () => {
+        facade.rides.set([mockRide]);
+        facade.addRideFromSse(mockRide);
+        expect(facade.rides().length).toBe(1);
+    });
+
+    it('should set error on createRide failure', (done) => {
+        rideApiSpy.createRide.mockReturnValue(throwError(() => ({ error: { message: 'Falha' } })));
+
+        facade.createRide({ userId: 'u', origin: {} as any, destination: {} as any }).subscribe({
+            error: () => {
+                expect(facade.error()).toBe('Falha');
+                done();
+            },
+        });
+    });
+
+    it('should set default error message on createRide failure without message', (done) => {
+        rideApiSpy.createRide.mockReturnValue(throwError(() => ({})));
+
+        facade.createRide({ userId: 'u', origin: {} as any, destination: {} as any }).subscribe({
+            error: () => {
+                expect(facade.error()).toBe('Erro ao criar corrida');
+                done();
+            },
+        });
+    });
+
+    it('should set error on acceptRide failure', (done) => {
+        rideApiSpy.acceptRide.mockReturnValue(throwError(() => ({ error: { message: 'Conflito' } })));
+
+        facade.acceptRide('ride-1', 'driver-1').subscribe({
+            error: () => {
+                expect(facade.error()).toBe('Conflito');
+                done();
+            },
+        });
+    });
+
+    it('should set default error on acceptRide failure without message', (done) => {
+        rideApiSpy.acceptRide.mockReturnValue(throwError(() => ({})));
+
+        facade.acceptRide('ride-1', 'driver-1').subscribe({
+            error: () => {
+                expect(facade.error()).toBe('Erro ao aceitar corrida');
+                done();
+            },
+        });
+    });
+
+    it('should remove ride and set loading on rejectRide success', (done) => {
+        facade.rides.set([mockRide]);
+        rideApiSpy.rejectRide.mockReturnValue(of({ success: true, message: 'OK', data: undefined as any, timestamp: '' }));
+
+        facade.rejectRide(mockRide.id, 'driver-1').subscribe(() => {
+            expect(facade.rides().find((r) => r.id === mockRide.id)).toBeUndefined();
+            done();
+        });
+    });
+
+    it('should set error on rejectRide failure', (done) => {
+        rideApiSpy.rejectRide.mockReturnValue(throwError(() => ({ error: { message: 'Erro rejeitar' } })));
+
+        facade.rejectRide('ride-1', 'driver-1').subscribe({
+            error: () => {
+                expect(facade.error()).toBe('Erro rejeitar');
+                done();
+            },
+        });
+    });
+
+    it('should set default error on rejectRide failure without message', (done) => {
+        rideApiSpy.rejectRide.mockReturnValue(throwError(() => ({})));
+
+        facade.rejectRide('ride-1', 'driver-1').subscribe({
+            error: () => {
+                expect(facade.error()).toBe('Erro ao rejeitar corrida');
+                done();
+            },
+        });
+    });
+
+    it('should set default error on loadPendingRides failure without message', () => {
+        rideApiSpy.findPendingRides.mockReturnValue(throwError(() => ({})));
+
+        facade.loadPendingRides();
+
+        expect(facade.error()).toBe('Erro ao carregar corridas');
+    });
+
+    it('should remove ride by id', () => {
+        facade.rides.set([mockRide, { ...mockRide, id: 'other' }]);
+        facade.removeRide(mockRide.id);
+        expect(facade.rides().length).toBe(1);
+        expect(facade.rides()[0].id).toBe('other');
+    });
 });

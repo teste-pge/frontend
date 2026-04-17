@@ -123,4 +123,56 @@ describe('AddressFormComponent', () => {
         expect(logradouro.enabled).toBe(true);
         discardPeriodicTasks();
     }));
+
+    it('should format CEP input with mask on onCepInput', () => {
+        const input = { value: '01310100' } as HTMLInputElement;
+        const event = { target: input } as unknown as Event;
+
+        component.onCepInput(event);
+
+        expect(input.value).toBe('01310-100');
+    });
+
+    it('should handle short digits in onCepInput', () => {
+        const input = { value: '013' } as HTMLInputElement;
+        const event = { target: input } as unknown as Event;
+
+        component.onCepInput(event);
+
+        expect(input.value).toBe('013');
+    });
+
+    it('should truncate to 8 digits in onCepInput', () => {
+        const input = { value: '0131010099' } as HTMLInputElement;
+        const event = { target: input } as unknown as Event;
+
+        component.onCepInput(event);
+
+        expect(input.value).toBe('01310-100');
+    });
+
+    it('should clear fields when CEP lookup returns null', fakeAsync(() => {
+        // First set some values
+        parentForm.get('origin')!.patchValue({
+            logradouro: 'Teste', bairro: 'Teste', cidade: 'Teste', estado: 'SP',
+        });
+
+        parentForm.get('origin.cep')!.setValue('99999-999');
+        tick(500);
+        httpMock.expectOne('https://viacep.com.br/ws/99999999/json').flush({ erro: true });
+
+        expect(component.cepNotFound()).toBe(true);
+        expect(parentForm.get('origin.logradouro')!.value).toBe('');
+        discardPeriodicTasks();
+    }));
+
+    it('should handle HTTP error during CEP lookup', fakeAsync(() => {
+        parentForm.get('origin.cep')!.setValue('01310-100');
+        tick(500);
+        httpMock.expectOne('https://viacep.com.br/ws/01310100/json').error(new ProgressEvent('error'));
+
+        expect(component.cepNotFound()).toBe(true);
+        expect(component.loading()).toBe(false);
+        discardPeriodicTasks();
+    }));
 });

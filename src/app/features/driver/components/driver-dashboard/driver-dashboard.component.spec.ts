@@ -163,4 +163,87 @@ describe('DriverDashboardComponent', () => {
         const el: HTMLElement = fixture.nativeElement;
         expect(el.querySelector('app-connection-status')).toBeTruthy();
     });
+
+    it('should not call acceptRide when no driver is selected', () => {
+        component.selectedDriverId.set(null);
+        component.onAcceptRide('ride-1');
+        expect(mockRideFacade.acceptRide).not.toHaveBeenCalled();
+    });
+
+    it('should not call rejectRide when no driver is selected', () => {
+        component.selectedDriverId.set(null);
+        component.onRejectRide('ride-1');
+        expect(mockRideFacade.rejectRide).not.toHaveBeenCalled();
+    });
+
+    it('should call rejectRide and show success snackbar', () => {
+        mockRideFacade.rejectRide.mockReturnValue(of(undefined));
+        component.selectedDriverId.set('driver-1');
+        const snack = (component as any).snackBar;
+        const openSpy = jest.spyOn(snack, 'open');
+
+        component.onRejectRide('ride-1');
+
+        expect(mockRideFacade.rejectRide).toHaveBeenCalledWith('ride-1', 'driver-1');
+        expect(openSpy).toHaveBeenCalledWith('Corrida rejeitada.', 'OK', expect.objectContaining({ duration: 3000 }));
+    });
+
+    it('should show error snackbar on rejectRide failure', () => {
+        mockRideFacade.rejectRide.mockImplementation(() => ({
+            subscribe: (observer: any) => {
+                observer.error({ status: 500 });
+                return { unsubscribe: jest.fn() };
+            },
+        }));
+        component.selectedDriverId.set('driver-1');
+        const snack = (component as any).snackBar;
+        const openSpy = jest.spyOn(snack, 'open');
+
+        component.onRejectRide('ride-1');
+
+        expect(openSpy).toHaveBeenCalledWith('Erro ao rejeitar corrida.', 'OK', expect.objectContaining({ duration: 5000 }));
+    });
+
+    it('should show success snackbar on acceptRide success', () => {
+        mockRideFacade.acceptRide.mockReturnValue(of(mockRide));
+        component.selectedDriverId.set('driver-1');
+        const snack = (component as any).snackBar;
+        const openSpy = jest.spyOn(snack, 'open');
+
+        component.onAcceptRide('ride-1');
+
+        expect(openSpy).toHaveBeenCalledWith('✅ Corrida aceita!', 'OK', expect.objectContaining({ duration: 3000 }));
+    });
+
+    it('should show generic error on acceptRide non-409 failure', () => {
+        mockRideFacade.acceptRide.mockImplementation(() => ({
+            subscribe: (observer: any) => {
+                observer.error({ status: 500 });
+                return { unsubscribe: jest.fn() };
+            },
+        }));
+        component.selectedDriverId.set('driver-1');
+        const snack = (component as any).snackBar;
+        const openSpy = jest.spyOn(snack, 'open');
+
+        component.onAcceptRide('ride-1');
+
+        expect(openSpy).toHaveBeenCalledWith('Erro ao aceitar corrida.', 'OK', expect.objectContaining({ duration: 5000 }));
+    });
+
+    it('should show SSE error snackbar on SSE connection error', () => {
+        component.onDriverSelected('driver-1');
+        const snack = (component as any).snackBar;
+        const openSpy = jest.spyOn(snack, 'open');
+
+        sseSubject.error(new Error('connection lost'));
+
+        expect(openSpy).toHaveBeenCalledWith('Conexão SSE perdida', 'OK', expect.objectContaining({ duration: 5000 }));
+    });
+
+    it('should disconnect previous SSE when selecting new driver', () => {
+        component.onDriverSelected('driver-1');
+        component.onDriverSelected('driver-2');
+        expect(mockSseService.disconnect).toHaveBeenCalled();
+    });
 });

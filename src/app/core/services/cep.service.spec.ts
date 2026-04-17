@@ -49,4 +49,19 @@ describe('CepService', () => {
     const req = httpMock.expectOne('https://viacep.com.br/ws/00000000/json');
     req.flush({ erro: true });
   });
+
+  it('should return null for short CEP without HTTP call', () => {
+    service.lookup('123').subscribe((result) => {
+      expect(result).toBeNull();
+    });
+    httpMock.expectNone('https://viacep.com.br/ws/123/json');
+  });
+
+  it('should format CEP correctly', () => {
+    expect(service.formatCep('01310100')).toBe('01310-100');
+  });
+
+  it('should return value as-is for invalid length CEP in formatCep', () => {
+    expect(service.formatCep('123')).toBe('123');
+  });
 });

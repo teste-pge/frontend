@@ -89,4 +89,37 @@ describe('SseService', () => {
       createdAt: new Date().toISOString(),
     });
   });
+
+  it('should emit RIDE_ACCEPTED event', (done) => {
+    const events: SseEvent[] = [];
+    const sub = service.connect('driver-1').subscribe((event) => {
+      events.push(event);
+      if (event.type === 'RIDE_ACCEPTED') {
+        expect(event.data['rideId']).toBe('ride-456');
+        sub.unsubscribe();
+        done();
+      }
+    });
+
+    MockEventSource.instance.dispatchEvent('CONNECTED', { message: 'ok', driverId: 'driver-1', timestamp: '' });
+    MockEventSource.instance.dispatchEvent('RIDE_ACCEPTED', { rideId: 'ride-456' });
+  });
+
+  it('should set disconnected status on error', () => {
+    service.connect('driver-1').subscribe({ error: () => { } });
+
+    MockEventSource.instance.onerror?.();
+
+    expect(service.connectionStatus()).toBe('disconnected');
+  });
+
+  it('should disconnect and close EventSource', () => {
+    service.connect('driver-1').subscribe();
+    const instance = MockEventSource.instance;
+
+    service.disconnect();
+
+    expect(instance.readyState).toBe(2);
+    expect(service.connectionStatus()).toBe('disconnected');
+  });
 });

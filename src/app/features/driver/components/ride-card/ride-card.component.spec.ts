@@ -70,4 +70,9 @@ describe('RideCardComponent', () => {
 
         expect(spy).toHaveBeenCalledWith(mockRide.id);
     });
+
+    it('should format address correctly', () => {
+        const result = component.formatAddress(mockRide.origin);
+        expect(result).toBe('Av Paulista, 1000 - Bela Vista, São Paulo/SP');
+    });
 });

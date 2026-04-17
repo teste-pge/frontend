@@ -79,4 +79,30 @@ describe('RideApiService', () => {
     expect(req.request.body).toEqual({ driverId });
     req.flush({ success: true, message: 'Aceita', data: { id: rideId, status: 'ACCEPTED' }, timestamp: '' });
   });
+
+  it('should reject a ride', () => {
+    const rideId = 'ride-1';
+    const driverId = 'driver-1';
+
+    service.rejectRide(rideId, driverId).subscribe((res) => {
+      expect(res.success).toBe(true);
+    });
+
+    const req = httpMock.expectOne(`${baseUrl}/${rideId}/reject`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ driverId });
+    req.flush({ success: true, message: 'Rejeitada', data: null, timestamp: '' });
+  });
+
+  it('should find ride by id', () => {
+    const rideId = 'ride-1';
+
+    service.findById(rideId).subscribe((res) => {
+      expect(res.data.id).toBe(rideId);
+    });
+
+    const req = httpMock.expectOne(`${baseUrl}/${rideId}`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ success: true, message: 'OK', data: { id: rideId, status: 'PENDING' }, timestamp: '' });
+  });
 });
