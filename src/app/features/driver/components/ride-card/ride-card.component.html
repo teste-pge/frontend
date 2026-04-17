@@ -1,10 +1,9 @@
 <mat-card class="ride-card">
   <mat-card-header>
-    <mat-card-title class="ride-id">
-      Corrida #{{ ride().id | slice:0:8 }}...
-    </mat-card-title>
+    <mat-card-title class="ride-id"> Corrida #{{ ride().id | slice: 0 : 8 }}... </mat-card-title>
     <mat-card-subtitle>
-      {{ ride().createdAt | date:'dd/MM/yyyy HH:mm' }}
+      {{ ride().createdAt | date: 'dd/MM/yyyy HH:mm' }}
+      <app-status-badge [status]="ride().status" />
     </mat-card-subtitle>
   </mat-card-header>
 
@@ -33,21 +32,36 @@
   </mat-card-content>
 
   <mat-card-actions align="end">
-    <button
-      mat-stroked-button
-      color="warn"
-      (click)="reject.emit(ride().id)"
-      data-testid="reject-btn">
-      <mat-icon>close</mat-icon>
-      Rejeitar
-    </button>
-    <button
-      mat-raised-button
-      color="primary"
-      (click)="accept.emit(ride().id)"
-      data-testid="accept-btn">
-      <mat-icon>check</mat-icon>
-      Aceitar
-    </button>
+    @if (ride().status === 'PENDING') {
+      <button
+        mat-stroked-button
+        color="warn"
+        (click)="reject.emit(ride().id)"
+        data-testid="reject-btn"
+      >
+        <mat-icon>close</mat-icon>
+        Rejeitar
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="accept.emit(ride().id)"
+        data-testid="accept-btn"
+      >
+        <mat-icon>check</mat-icon>
+        Aceitar
+      </button>
+    }
+    @if (ride().status === 'ACCEPTED') {
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="complete.emit(ride().id)"
+        data-testid="complete-btn"
+      >
+        <mat-icon>done_all</mat-icon>
+        Finalizar Corrida
+      </button>
+    }
   </mat-card-actions>
 </mat-card>

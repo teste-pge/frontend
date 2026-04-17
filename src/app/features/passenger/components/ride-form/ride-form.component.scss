@@ -2,6 +2,13 @@
   max-width: 680px;
   margin: 24px auto;
   padding: 16px;
+
+  mat-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
 }
 
 .full-width {

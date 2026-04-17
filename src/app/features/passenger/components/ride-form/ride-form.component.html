@@ -1,16 +1,25 @@
 <mat-card class="ride-form-card">
   <mat-card-header>
     <mat-card-title>Solicitar Corrida</mat-card-title>
+    @if (selectedUserId()) {
+      <app-connection-status [status]="sseService.passengerConnectionStatus()" />
+    }
   </mat-card-header>
 
   <mat-card-content>
-    @if (createdRide()) {
-      <app-ride-confirmation [ride]="createdRide()!" />
+    @if (rideFacade.currentRide(); as activeRide) {
+      <app-ride-confirmation [ride]="activeRide" />
+
+      @if (activeRide.status === 'COMPLETED') {
+        <button mat-raised-button color="primary" class="submit-btn" (click)="onNewRide()">
+          Solicitar Nova Corrida
+        </button>
+      }
     } @else {
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <mat-form-field class="full-width">
           <mat-label>Passageiro</mat-label>
-          <mat-select formControlName="userId">
+          <mat-select formControlName="userId" (selectionChange)="onUserSelected($event.value)">
             @for (user of users; track user.id) {
               <mat-option [value]="user.id">{{ user.name }}</mat-option>
             }
@@ -20,15 +29,9 @@
           }
         </mat-form-field>
 
-        <app-address-form
-          label="Origem"
-          controlName="origin"
-          [parentForm]="form" />
+        <app-address-form label="Origem" controlName="origin" [parentForm]="form" />
 
-        <app-address-form
-          label="Destino"
-          controlName="destination"
-          [parentForm]="form" />
+        <app-address-form label="Destino" controlName="destination" [parentForm]="form" />
 
         @if (hasSameAddressError) {
           <p class="same-address-error">Origem e destino não podem ser iguais</p>
@@ -47,7 +50,8 @@
           color="primary"
           type="submit"
           class="submit-btn"
-          [disabled]="form.invalid || submitting()">
+          [disabled]="form.invalid || submitting()"
+        >
           Solicitar Corrida
         </button>
       </form>

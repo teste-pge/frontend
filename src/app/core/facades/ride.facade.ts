@@ -10,6 +10,7 @@ export class RideFacade {
     private readonly rideApi = inject(RideApiService);
 
     readonly rides = signal<Ride[]>([]);
+    readonly currentRide = signal<Ride | null>(null);
     readonly loading = signal(false);
     readonly error = signal<string | null>(null);
 
@@ -25,13 +26,32 @@ export class RideFacade {
         });
     }
 
+    loadActiveRideForUser(userId: string): void {
+        this.rideApi.findActiveByUser(userId).subscribe({
+            next: (response) => this.currentRide.set(response.data ?? null),
+            error: () => this.currentRide.set(null),
+        });
+    }
+
+    loadActiveRideForDriver(driverId: string): void {
+        this.rideApi.findActiveByDriver(driverId).subscribe({
+            next: (response) => {
+                this.currentRide.set(response.data ?? null);
+            },
+            error: () => this.currentRide.set(null),
+        });
+    }
+
     createRide(request: CreateRideRequest): Observable<Ride> {
         this.loading.set(true);
         this.error.set(null);
 
         return this.rideApi.createRide(request).pipe(
             map((response) => response.data),
-            tap((ride) => this.rides.update((list) => [ride, ...list])),
+            tap((ride) => {
+                this.rides.update((list) => [ride, ...list]);
+                this.currentRide.set(ride);
+            }),
             catchError((err) => {
                 this.error.set(err?.error?.message ?? 'Erro ao criar corrida');
                 return throwError(() => err);
@@ -46,9 +66,29 @@ export class RideFacade {
 
         return this.rideApi.acceptRide(rideId, driverId).pipe(
             map((response) => response.data),
-            tap(() => this.removeRide(rideId)),
+            tap((ride) => {
+                this.removeRide(rideId);
+                this.currentRide.set(ride);
+            }),
             catchError((err) => {
                 this.error.set(err?.error?.message ?? 'Erro ao aceitar corrida');
+                return throwError(() => err);
+            }),
+            finalize(() => this.loading.set(false)),
+        );
+    }
+
+    completeRide(rideId: string, driverId: string): Observable<Ride> {
+        this.loading.set(true);
+        this.error.set(null);
+
+        return this.rideApi.completeRide(rideId, driverId).pipe(
+            map((response) => response.data),
+            tap(() => {
+                this.currentRide.set(null);
+            }),
+            catchError((err) => {
+                this.error.set(err?.error?.message ?? 'Erro ao completar corrida');
                 return throwError(() => err);
             }),
             finalize(() => this.loading.set(false)),
@@ -74,6 +114,13 @@ export class RideFacade {
         this.rides.update((list) => {
             const exists = list.some((r) => r.id === ride.id);
             return exists ? list : [ride, ...list];
+        });
+    }
+
+    updateCurrentRideStatus(status: Ride['status'], extra?: Partial<Ride>): void {
+        this.currentRide.update((ride) => {
+            if (!ride) return null;
+            return { ...ride, status, ...extra };
         });
     }
 

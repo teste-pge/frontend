@@ -35,29 +35,42 @@
   }
 
   @if (selectedDriverId()) {
-    @if (rideFacade.loading()) {
-      <app-loading-spinner message="Carregando corridas..." />
-    }
-
-    @if (rideFacade.error()) {
-      <app-error-message [error]="rideFacade.error()!" />
-    }
-
-    @if (rideFacade.rides().length === 0 && !rideFacade.loading()) {
-      <mat-card class="empty-state">
+    @if (rideFacade.currentRide(); as currentRide) {
+      <mat-card class="active-ride-card">
+        <mat-card-header>
+          <mat-card-title>🚗 Corrida em Andamento</mat-card-title>
+        </mat-card-header>
         <mat-card-content>
-          <p>Nenhuma corrida pendente no momento.</p>
-          <p class="hint">Novas corridas aparecerão automaticamente.</p>
+          <app-ride-card [ride]="currentRide" (complete)="onCompleteRide($event)" />
         </mat-card-content>
       </mat-card>
     }
 
-    @for (ride of rideFacade.rides(); track ride.id) {
-      <app-ride-card
-        [ride]="ride"
-        (accept)="onAcceptRide($event)"
-        (reject)="onRejectRide($event)"
-      />
+    @if (!rideFacade.currentRide()) {
+      @if (rideFacade.loading()) {
+        <app-loading-spinner message="Carregando corridas..." />
+      }
+
+      @if (rideFacade.error()) {
+        <app-error-message [error]="rideFacade.error()!" />
+      }
+
+      @if (rideFacade.rides().length === 0 && !rideFacade.loading()) {
+        <mat-card class="empty-state">
+          <mat-card-content>
+            <p>Nenhuma corrida pendente no momento.</p>
+            <p class="hint">Novas corridas aparecerão automaticamente.</p>
+          </mat-card-content>
+        </mat-card>
+      }
+
+      @for (ride of rideFacade.rides(); track ride.id) {
+        <app-ride-card
+          [ride]="ride"
+          (accept)="onAcceptRide($event)"
+          (reject)="onRejectRide($event)"
+        />
+      }
     }
   }
 </div>

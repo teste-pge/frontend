@@ -8,7 +8,7 @@ import { Subscription } from 'rxjs';
 import { DriverFacade } from '@core/facades';
 import { RideFacade } from '@core/facades';
 import { SseService } from '@core/services/sse.service';
-import { Ride } from '@core/models';
+import { RideApiService } from '@core/services/ride-api.service';
 import { RideCardComponent } from '../ride-card/ride-card.component';
 import { ConnectionStatusComponent } from '../connection-status/connection-status.component';
 import { LoadingSpinnerComponent } from '@shared/components/loading-spinner/loading-spinner.component';
@@ -34,7 +34,10 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
   readonly driverFacade = inject(DriverFacade);
   readonly rideFacade = inject(RideFacade);
   readonly sseService = inject(SseService);
+  private readonly rideApi = inject(RideApiService);
   private readonly snackBar = inject(MatSnackBar);
+
+  private readonly snackConfig = { duration: 3000, verticalPosition: 'top' as const, horizontalPosition: 'right' as const };
 
   readonly selectedDriverId = signal<string | null>(null);
 
@@ -48,19 +51,34 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
     this.disconnectSse();
     this.selectedDriverId.set(driverId);
     this.rideFacade.rides.set([]);
+    this.rideFacade.currentRide.set(null);
     this.rideFacade.error.set(null);
 
+    this.rideFacade.loadActiveRideForDriver(driverId);
     this.rideFacade.loadPendingRides();
 
     this.sseSubscription = this.sseService.connect(driverId).subscribe({
       next: (event) => {
         if (event.type === 'NEW_RIDE' && event.data) {
-          this.rideFacade.addRideFromSse(event.data as unknown as Ride);
-          this.snackBar.open('🚗 Nova corrida disponível!', 'OK', { duration: 3000 });
+          const rideId = event.data['rideId'] as string;
+          if (rideId) {
+            this.rideApi.findById(rideId).subscribe({
+              next: (res) => {
+                if (res.data) {
+                  this.rideFacade.addRideFromSse(res.data);
+                }
+              },
+            });
+          }
+          this.snackBar.open('🚗 Nova corrida disponível!', 'OK', this.snackConfig);
+        }
+        if (event.type === 'RIDE_ACCEPTED' && event.data) {
+          const rideId = event.data['rideId'] as string;
+          this.rideFacade.removeRide(rideId);
         }
       },
       error: () => {
-        this.snackBar.open('Conexão SSE perdida', 'OK', { duration: 5000 });
+        this.snackBar.open('Conexão SSE perdida', 'OK', { ...this.snackConfig, duration: 5000 });
       },
     });
   }
@@ -71,14 +89,14 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
 
     this.rideFacade.acceptRide(rideId, driverId).subscribe({
       next: () => {
-        this.snackBar.open('✅ Corrida aceita!', 'OK', { duration: 3000 });
+        this.snackBar.open('✅ Corrida aceita!', 'OK', this.snackConfig);
       },
       error: (err) => {
         const message =
           err?.status === 409
             ? 'Esta corrida já foi aceita por outro motorista.'
             : 'Erro ao aceitar corrida.';
-        this.snackBar.open(message, 'OK', { duration: 5000 });
+        this.snackBar.open(message, 'OK', { ...this.snackConfig, duration: 5000 });
       },
     });
   }
@@ -89,10 +107,24 @@ export class DriverDashboardComponent implements OnInit, OnDestroy {
 
     this.rideFacade.rejectRide(rideId, driverId).subscribe({
       next: () => {
-        this.snackBar.open('Corrida rejeitada.', 'OK', { duration: 3000 });
+        this.snackBar.open('Corrida rejeitada.', 'OK', this.snackConfig);
       },
       error: () => {
-        this.snackBar.open('Erro ao rejeitar corrida.', 'OK', { duration: 5000 });
+        this.snackBar.open('Erro ao rejeitar corrida.', 'OK', { ...this.snackConfig, duration: 5000 });
+      },
+    });
+  }
+
+  onCompleteRide(rideId: string): void {
+    const driverId = this.selectedDriverId();
+    if (!driverId) return;
+
+    this.rideFacade.completeRide(rideId, driverId).subscribe({
+      next: () => {
+        this.snackBar.open('🏁 Corrida finalizada!', 'OK', this.snackConfig);
+      },
+      error: () => {
+        this.snackBar.open('Erro ao finalizar corrida.', 'OK', { ...this.snackConfig, duration: 5000 });
       },
     });
   }

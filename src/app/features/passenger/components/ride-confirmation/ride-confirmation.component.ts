@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 
@@ -13,7 +13,14 @@ import { StatusBadgeComponent } from '@shared/components/status-badge/status-bad
   template: `
     <mat-card class="confirmation-card">
       <mat-card-header>
-        <mat-card-title>🎉 Corrida Solicitada!</mat-card-title>
+        <mat-card-title>
+          @switch (ride().status) {
+            @case ('PENDING') { 🕐 Aguardando Motorista... }
+            @case ('ACCEPTED') { 🚗 Motorista a caminho! }
+            @case ('COMPLETED') { ✅ Corrida Finalizada! }
+            @default { 🎉 Corrida Solicitada! }
+          }
+        </mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <div class="detail-row">

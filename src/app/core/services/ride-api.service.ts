@@ -41,4 +41,19 @@ export class RideApiService {
       { driverId }
     );
   }
+
+  completeRide(rideId: string, driverId: string): Observable<ApiResponse<Ride>> {
+    return this.http.post<ApiResponse<Ride>>(
+      `${this.baseUrl}/${rideId}/complete`,
+      { driverId }
+    );
+  }
+
+  findActiveByUser(userId: string): Observable<ApiResponse<Ride | null>> {
+    return this.http.get<ApiResponse<Ride | null>>(`${this.baseUrl}/active/user/${userId}`);
+  }
+
+  findActiveByDriver(driverId: string): Observable<ApiResponse<Ride | null>> {
+    return this.http.get<ApiResponse<Ride | null>>(`${this.baseUrl}/active/driver/${driverId}`);
+  }
 }

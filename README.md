@@ -192,23 +192,35 @@ src/app/
 - Formulário de endereço com busca automática por CEP (ViaCEP)
 - Validação cross-field (origem ≠ destino)
 - Confirmação visual após criação da corrida
+- **SSE em tempo real** — recebe notificações de corrida aceita e finalizada
+- **Carregamento de corrida ativa** — ao selecionar passageiro, exibe corrida em andamento (se houver)
+- **Status dinâmico** — card atualiza em tempo real (🕐 Aguardando → 🚗 A caminho → ✅ Finalizada)
+- Indicador de conexão SSE no header do card
 
 ### 🚙 Motorista (`/driver`)
 - Seleção de motorista (carregado do backend)
 - Conexão SSE em tempo real com indicador visual
 - Lista de corridas pendentes atualizada automaticamente
 - Aceitar/Rejeitar corrida com feedback (snackbar)
+- **Finalizar corrida** — botão disponível após aceitar, notifica passageiro via Kafka → SSE
+- **Carregamento de corrida ativa** — ao selecionar motorista, exibe corrida aceita (se houver)
 - Tratamento de conflito 409 (corrida já aceita)
+- Snackbars posicionados no canto superior direito
 
 ---
 
 ## Alinhamento com o Backend
 
-| Endpoint Backend                           | Componente Frontend     |
-|--------------------------------------------|-------------------------|
-| `POST /api/v1/rides`                       | RideFormComponent       |
-| `GET /api/v1/rides?status=PENDING`         | DriverDashboardComponent|
-| `POST /api/v1/rides/{id}/accept`           | DriverDashboardComponent|
-| `POST /api/v1/rides/{id}/reject`           | DriverDashboardComponent|
-| `GET /api/v1/drivers`                      | DriverDashboardComponent|
-| `GET /api/v1/notifications/drivers/{id}/stream` | SseService         |
+| Endpoint Backend                                  | Componente Frontend      |
+|---------------------------------------------------|---------------------------|
+| `POST /api/v1/rides`                              | RideFormComponent         |
+| `GET /api/v1/rides?status=PENDING`                | DriverDashboardComponent  |
+| `GET /api/v1/rides/{id}`                          | DriverDashboardComponent (SSE fetch) |
+| `POST /api/v1/rides/{id}/accept`                  | DriverDashboardComponent  |
+| `POST /api/v1/rides/{id}/reject`                  | DriverDashboardComponent  |
+| `POST /api/v1/rides/{id}/complete`                | DriverDashboardComponent  |
+| `GET /api/v1/rides/active/user/{userId}`          | RideFormComponent         |
+| `GET /api/v1/rides/active/driver/{driverId}`      | DriverDashboardComponent  |
+| `GET /api/v1/drivers`                             | DriverDashboardComponent  |
+| `GET /api/v1/notifications/drivers/{id}/stream`   | SseService (driver)      |
+| `GET /api/v1/notifications/passengers/{id}/stream`| SseService (passenger)   |
