@@ -16,25 +16,23 @@ export class CepService {
       return of(null);
     }
 
-    return this.http
-      .get<ViaCepResponse>(`${this.baseUrl}/${cleanCep}/json`)
-      .pipe(
-        map((response) => {
-          if (response.erro) {
-            return null;
-          }
+    return this.http.get<ViaCepResponse>(`${this.baseUrl}/${cleanCep}/json`).pipe(
+      map((response) => {
+        if (response.erro) {
+          return null;
+        }
 
-          return {
-            cep: this.formatCep(response.cep),
-            logradouro: response.logradouro,
-            numero: '',
-            complemento: response.complemento || '',
-            bairro: response.bairro,
-            cidade: response.localidade,
-            estado: response.uf,
-          };
-        })
-      );
+        return {
+          cep: this.formatCep(response.cep),
+          logradouro: response.logradouro,
+          numero: '',
+          complemento: response.complemento || '',
+          bairro: response.bairro,
+          cidade: response.localidade,
+          estado: response.uf,
+        };
+      })
+    );
   }
 
   formatCep(value: string): string {

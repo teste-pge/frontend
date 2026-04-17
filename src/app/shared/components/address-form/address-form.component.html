@@ -1,0 +1,79 @@
+<fieldset>
+  <legend>{{ label() }}</legend>
+
+  <div class="form-row">
+    <mat-form-field class="cep-field">
+      <mat-label>CEP</mat-label>
+      <input matInput
+        [formControl]="cepControl"
+        placeholder="00000-000"
+        maxlength="9"
+        (input)="onCepInput($event)" />
+      @if (cepControl.hasError('required')) {
+        <mat-error>CEP é obrigatório</mat-error>
+      }
+      @if (cepControl.hasError('cepFormat')) {
+        <mat-error>CEP inválido (00000-000)</mat-error>
+      }
+      @if (cepNotFound()) {
+        <mat-error>CEP não encontrado</mat-error>
+      }
+    </mat-form-field>
+
+    @if (loading()) {
+      <mat-spinner diameter="24"></mat-spinner>
+    }
+  </div>
+
+  <mat-form-field class="full-width">
+    <mat-label>Logradouro</mat-label>
+    <input matInput [formControl]="getControl('logradouro')" />
+    @if (getControl('logradouro').hasError('required')) {
+      <mat-error>Logradouro é obrigatório</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="form-row">
+    <mat-form-field class="numero-field">
+      <mat-label>Número</mat-label>
+      <input matInput [formControl]="getControl('numero')" />
+      @if (getControl('numero').hasError('required')) {
+        <mat-error>Número é obrigatório</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field class="complemento-field">
+      <mat-label>Complemento</mat-label>
+      <input matInput [formControl]="getControl('complemento')" />
+    </mat-form-field>
+  </div>
+
+  <mat-form-field class="full-width">
+    <mat-label>Bairro</mat-label>
+    <input matInput [formControl]="getControl('bairro')" />
+    @if (getControl('bairro').hasError('required')) {
+      <mat-error>Bairro é obrigatório</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="form-row">
+    <mat-form-field class="cidade-field">
+      <mat-label>Cidade</mat-label>
+      <input matInput [formControl]="getControl('cidade')" />
+      @if (getControl('cidade').hasError('required')) {
+        <mat-error>Cidade é obrigatória</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field class="estado-field">
+      <mat-label>Estado</mat-label>
+      <input matInput [formControl]="getControl('estado')" maxlength="2" />
+      @if (getControl('estado').hasError('required')) {
+        <mat-error>Estado é obrigatório</mat-error>
+      }
+      @if (getControl('estado').hasError('brazilianState')) {
+        <mat-error>UF inválida</mat-error>
+      }
+    </mat-form-field>
+  </div>
+</fieldset>
