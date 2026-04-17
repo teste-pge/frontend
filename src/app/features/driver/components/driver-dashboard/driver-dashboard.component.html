@@ -1,0 +1,61 @@
+<div class="dashboard-container">
+  <mat-card class="driver-selector-card">
+    <mat-card-header>
+      <mat-card-title>Painel do Motorista</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="selector-row">
+        <mat-form-field class="full-width">
+          <mat-label>Selecione o motorista</mat-label>
+          <mat-select
+            (selectionChange)="onDriverSelected($event.value)"
+            data-testid="driver-select">
+            @for (driver of driverFacade.drivers(); track driver.id) {
+              <mat-option [value]="driver.id">
+                {{ driver.name }} — {{ driver.vehiclePlate }}
+                @if (driver.status === 'BUSY') {
+                  (Ocupado)
+                }
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        @if (selectedDriverId()) {
+          <app-connection-status [status]="sseService.connectionStatus()" />
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  @if (driverFacade.loading()) {
+    <app-loading-spinner message="Carregando motoristas..." />
+  }
+
+  @if (selectedDriverId()) {
+    @if (rideFacade.loading()) {
+      <app-loading-spinner message="Carregando corridas..." />
+    }
+
+    @if (rideFacade.error()) {
+      <app-error-message [error]="rideFacade.error()!" />
+    }
+
+    @if (rideFacade.rides().length === 0 && !rideFacade.loading()) {
+      <mat-card class="empty-state">
+        <mat-card-content>
+          <p>Nenhuma corrida pendente no momento.</p>
+          <p class="hint">Novas corridas aparecerão automaticamente.</p>
+        </mat-card-content>
+      </mat-card>
+    }
+
+    @for (ride of rideFacade.rides(); track ride.id) {
+      <app-ride-card
+        [ride]="ride"
+        (accept)="onAcceptRide($event)"
+        (reject)="onRejectRide($event)" />
+    }
+  }
+</div>

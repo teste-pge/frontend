@@ -1,0 +1,39 @@
+.ride-card {
+  margin-bottom: 16px;
+}
+
+.ride-id {
+  font-size: 1rem;
+}
+
+.address-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.address-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.origin-icon { color: #4caf50; }
+.destination-icon { color: #f44336; }
+
+.address-label {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.address-text {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+}
+
+mat-card-actions button {
+  margin-left: 8px !important;
+}

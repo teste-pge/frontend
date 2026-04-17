@@ -1,0 +1,32 @@
+.dashboard-container {
+  max-width: 720px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+.driver-selector-card {
+  margin-bottom: 24px;
+}
+
+.selector-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.full-width {
+  flex: 1;
+  min-width: 250px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.hint {
+  font-size: 0.85rem;
+  margin-top: 4px;
+}

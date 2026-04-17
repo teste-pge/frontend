@@ -1,0 +1,53 @@
+<mat-card class="ride-card">
+  <mat-card-header>
+    <mat-card-title class="ride-id">
+      Corrida #{{ ride().id | slice:0:8 }}...
+    </mat-card-title>
+    <mat-card-subtitle>
+      {{ ride().createdAt | date:'dd/MM/yyyy HH:mm' }}
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="address-section">
+      <div class="address-row">
+        <mat-icon class="origin-icon">trip_origin</mat-icon>
+        <div>
+          <span class="address-label">Origem</span>
+          <p class="address-text">
+            {{ ride().origin.displayString || formatAddress(ride().origin) }}
+          </p>
+        </div>
+      </div>
+
+      <div class="address-row">
+        <mat-icon class="destination-icon">place</mat-icon>
+        <div>
+          <span class="address-label">Destino</span>
+          <p class="address-text">
+            {{ ride().destination.displayString || formatAddress(ride().destination) }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+
+  <mat-card-actions align="end">
+    <button
+      mat-stroked-button
+      color="warn"
+      (click)="reject.emit(ride().id)"
+      data-testid="reject-btn">
+      <mat-icon>close</mat-icon>
+      Rejeitar
+    </button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="accept.emit(ride().id)"
+      data-testid="accept-btn">
+      <mat-icon>check</mat-icon>
+      Aceitar
+    </button>
+  </mat-card-actions>
+</mat-card>

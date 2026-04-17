@@ -6,11 +6,11 @@ import { Ride } from '@core/models';
 import { StatusBadgeComponent } from '@shared/components/status-badge/status-badge.component';
 
 @Component({
-    selector: 'app-ride-confirmation',
-    standalone: true,
-    imports: [DatePipe, MatCardModule, StatusBadgeComponent],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    template: `
+  selector: 'app-ride-confirmation',
+  standalone: true,
+  imports: [DatePipe, MatCardModule, StatusBadgeComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
     <mat-card class="confirmation-card">
       <mat-card-header>
         <mat-card-title>🎉 Corrida Solicitada!</mat-card-title>
@@ -39,7 +39,7 @@ import { StatusBadgeComponent } from '@shared/components/status-badge/status-bad
       </mat-card-content>
     </mat-card>
   `,
-    styles: `
+  styles: `
     .confirmation-card {
       margin-top: 16px;
       background: #e8f5e9;
@@ -62,9 +62,9 @@ import { StatusBadgeComponent } from '@shared/components/status-badge/status-bad
   `,
 })
 export class RideConfirmationComponent {
-    ride = input.required<Ride>();
+  ride = input.required<Ride>();
 
-    formatAddress(addr: { logradouro?: string; numero?: string; bairro?: string; cidade?: string; estado?: string }): string {
-        return `${addr.logradouro}, ${addr.numero} - ${addr.bairro}, ${addr.cidade}/${addr.estado}`;
-    }
+  formatAddress(addr: { logradouro?: string; numero?: string; bairro?: string; cidade?: string; estado?: string }): string {
+    return `${addr.logradouro}, ${addr.numero} - ${addr.bairro}, ${addr.cidade}/${addr.estado}`;
+  }
 }

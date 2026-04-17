@@ -1,0 +1,47 @@
+.connection-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-weight: 500;
+}
+
+.indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.connected {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.connected .indicator {
+  background: #4caf50;
+  box-shadow: 0 0 6px #4caf50;
+}
+
+.disconnected {
+  background: #ffebee;
+  color: #c62828;
+}
+.disconnected .indicator {
+  background: #f44336;
+}
+
+.connecting {
+  background: #fff8e1;
+  color: #f57f17;
+}
+.connecting .indicator {
+  background: #ffb300;
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
